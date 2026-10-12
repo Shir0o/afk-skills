@@ -1,119 +1,134 @@
-# afk-issue-loop
+# afk-skills
 
-> An autonomous, cost-minimal GitHub issue loop for AI coding agents — triage unlabeled issues, implement `ready-for-agent` issues, open PRs, watch CI, fix until green, and squash-merge. Run serially or spawn parallel agents. No human babysitting required.
+> Autonomous, cost-minimal GitHub workflows for AI coding agents. Run batch issue loops or ship single tasks hands-free from specification to merge.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
-## What it does
+## Skills in this Suite
+
+This repository provides two complementary autonomous skills:
+
+| Skill | Path | Description |
+|---|---|---|
+| **`afk-single-issue`** | [`skills/afk-single-issue/SKILL.md`](skills/afk-single-issue/SKILL.md) | **Single-task end-to-end runner**: Takes an active conversation (e.g. post-`/grill-with-docs`) or single issue, synthesizes `to-spec`, labels `ready-for-agent`, implements via TDD in an isolated worktree, opens PR with `/pr`, watches CI, squash-merges, and cleans up worktree. |
+| **`afk-issue-loop`** | [`skills/afk-issue-loop/SKILL.md`](skills/afk-issue-loop/SKILL.md) | **Backlog batch loop**: Continuously processes issues across your GitHub repository (triages unlabeled issues, implements `ready-for-agent` issues in serial or parallel worktrees, PRs, watches CI, squash-merges, and repeats). |
+
+---
+
+## 1. `afk-single-issue` (Post-Grill & Single Issue Runner)
+
+Use this immediately after a planning session, interactive `/grill-with-docs`, or when targeting a specific feature task.
+
+### Workflow
+
+```
+Active Chat / /grill-with-docs (Clarification complete)
+  │
+  ▼
+Phase 0: Synthesize to-spec
+  • Formulate Problem Statement, Solution, User Stories, Decisions, Seams
+  • Create or update GitHub issue with label `ready-for-agent`
+  │
+  ▼
+Phase 1: Isolated Worktree
+  • Create .worktrees/issue-<N> on agent/issue-<N> from origin/main
+  │
+  ▼
+Phase 2: Implement (TDD + Review)
+  • TDD at pre-agreed seams (/tdd)
+  • Full local test gate & /code-review
+  │
+  ▼
+Phase 3: Pull Request & CI Watch
+  • Create PR using /pr template (Summary sketch, Evidence, Merge Danger)
+  • Watch CI (gh pr checks --watch), auto-fix up to 3 cycles if red
+  │
+  ▼
+Phase 4: Squash-Merge & Teardown
+  • gh pr merge --squash --admin
+  • Sync main checkout (git pull --ff-only)
+  • Remove .worktrees/issue-<N> and delete agent/issue-<N> branch
+```
+
+### Usage
+
+```bash
+# Run on current chat context (e.g. right after /grill-with-docs)
+cook this
+run afk-single-issue
+
+# Or run on a specific issue
+run afk-single-issue for #42
+```
+
+---
+
+## 2. `afk-issue-loop` (Autonomous Backlog Processor)
+
+Use this to autonomously drain an entire repository queue.
 
 - **Triage** — labels unlabeled issues (`needs-triage → needs-info / ready-for-agent / wontfix`), closes exact duplicates inline.
-- **Implement** — branches off `main`, writes code TDD-style, opens a PR, watches CI, fixes failures (up to 3 cycles), then merges or hands off to the orchestrator.
-- **Orchestrate** — runs serially (1 subagent at a time) or in parallel ($N$ concurrent workers for independent issues, partitioned to prevent merge conflicts).
-- **Interruption Resilience** — resumes in-flight subagents by inspecting session history and worktree diffs rather than starting from scratch after network drops or process stops.
-- **Scoped Worktree Cleanup** — safely tears down settled worktrees and branches upon PR merge, preserving worktrees for blocked/interrupted issues and never touching worktrees created by other agents.
+- **Implement** — branches off `main`, writes code TDD-style, opens a PR, watches CI, fixes failures, and merges.
+- **Orchestrate** — runs serially (1 subagent at a time) or in parallel ($N$ concurrent workers partitioned across disjoint subsystems).
+- **Interruption Resilience** — resumes in-flight subagents by inspecting session history and worktree diffs.
+- **Scoped Cleanup** — cleans up only worktrees registered to the active session.
 
-## How it works
+### Usage
 
-`SKILL.md` is a natural-language workflow file. Point your AI coding agent at it and it will follow the three-phase loop:
-
+```bash
+run the issue loop
+process open issues AFK
+run the issue loop in parallel
 ```
-Orchestrator (the agent)
-  │
-  ├─ Phase 0: ground repo profile, scan in-flight work, & ask execution mode
-  │    gh repo view, check existing worktrees/branches/PRs, open issue queue
-  │    prompt user: serial (1 agent) or parallel (N concurrent agents)
-  │
-  ├─ Phase 1: issue dispatch (serial or conflict-minimized parallel across worktrees)
-  │    ├─ interrupted in-flight   →  resume with worktree diff context
-  │    ├─ unlabeled / needs-triage →  triage workflow (Branch B)
-  │    └─ ready-for-agent          →  implement + tdd + code-review (Branch A)
-  │
-  ├─ Phase 2: after each task settles
-  │    verify gh claim → merge (squash) → sync main → dispatch next issue(s)
-  │
-  └─ Phase 3: wrap-up
-       close epics, report table of outcomes
-```
+
+---
 
 ## Dependencies
 
-This workflow calls into five companion skill files from [Matt Pocock's engineering skill suite](https://github.com/mattpocock/skills). **All five must be available to your agent before using this workflow.**
+These workflows integrate with companion skill files from [Matt Pocock's engineering skill suite](https://github.com/mattpocock/skills):
 
-| Skill | What it does in this loop |
-|---|---|
-| [`triage`](https://github.com/mattpocock/skills/tree/main/triage) | Labels unlabeled/needs-triage issues, closes duplicates |
-| [`implement`](https://github.com/mattpocock/skills/tree/main/implement) | Branches, writes code, opens PR |
-| [`tdd`](https://github.com/mattpocock/skills/tree/main/tdd) | Red-green-refactor cycle used by the implement step |
-| [`code-review`](https://github.com/mattpocock/skills/tree/main/code-review) | Self-review before pushing PR |
-| [`pr`](https://github.com/mattpocock/skills/tree/main/skills/engineering/pr) | Standards-compliant PR description (summary diagram/diff, evidence, door & blast radius) |
+| Skill | Used by | Purpose |
+|---|---|---|
+| [`to-spec`](https://github.com/mattpocock/skills/tree/main/to-spec) | `afk-single-issue` | Synthesizes conversation context into structured spec |
+| [`triage`](https://github.com/mattpocock/skills/tree/main/triage) | `afk-issue-loop` | Labels unlabeled/needs-triage issues, closes duplicates |
+| [`implement`](https://github.com/mattpocock/skills/tree/main/implement) | Both | Branches, writes code, prepares PR |
+| [`tdd`](https://github.com/mattpocock/skills/tree/main/tdd) | Both | Red-green-refactor cycle |
+| [`code-review`](https://github.com/mattpocock/skills/tree/main/code-review) | Both | Pre-push self-review against standards & spec |
+| [`pr`](https://github.com/mattpocock/skills/tree/main/skills/engineering/pr) | Both | Standards-compliant PR description |
 
-## Requirements
-
-- An AI coding agent capable of reading and following markdown workflow files
-- `gh` CLI authenticated with `repo` + `workflow` scopes
-- A GitHub repo with the label vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`
-  (or a `docs/agents/triage-labels.md` defining your own)
+---
 
 ## Installation
 
-### 1. Install the dependency skills
-
-Download the five companion skills into wherever your agent loads workflow files from. Example using a `.agents/skills/` folder at the repo root:
+### 1. Install companion skills
 
 ```bash
-for skill in triage implement tdd code-review pr; do
+for skill in to-spec triage implement tdd code-review pr; do
   mkdir -p .agents/skills/$skill
   curl -fsSL "https://raw.githubusercontent.com/mattpocock/skills/main/skills/engineering/$skill/SKILL.md" \
     -o .agents/skills/$skill/SKILL.md
 done
 ```
 
-Or follow the install instructions in [Matt Pocock's skills repo](https://github.com/mattpocock/skills).
-
-### 2. Install this workflow
+### 2. Install AFK Skills
 
 ```bash
+# Install afk-single-issue
+mkdir -p .agents/skills/afk-single-issue
+curl -fsSL https://raw.githubusercontent.com/Shir0o/afk-skills/main/skills/afk-single-issue/SKILL.md \
+  -o .agents/skills/afk-single-issue/SKILL.md
+
+# Install afk-issue-loop
 mkdir -p .agents/skills/afk-issue-loop
-curl -fsSL https://raw.githubusercontent.com/Shir0o/afk-issue-loop-skill/main/SKILL.md \
+curl -fsSL https://raw.githubusercontent.com/Shir0o/afk-skills/main/skills/afk-issue-loop/SKILL.md \
   -o .agents/skills/afk-issue-loop/SKILL.md
 ```
 
-Commit and push so your whole team gets it:
+---
 
-```bash
-git add .agents/
-git commit -m "chore: add afk-issue-loop skill and dependencies"
-```
-
-> **Note:** The exact install path depends on your agent. `.agents/skills/` is a common convention. Check your agent's docs for where it loads workflow files from.
-
-## Usage
-
-Tell your agent to run the loop. Exact phrasing depends on your agent, but any of these work:
-
-```
-run the issue loop
-process open issues AFK
-```
-
-The agent reads `SKILL.md`, grounds the repo profile (merge policy, required CI checks, label config), asks if you prefer sequential execution (1 agent, cost-minimal; default) or parallel execution ($N$ agents across isolated worktrees), and then works through the queue until it's empty.
-
-You can also specify parallel execution directly:
-
-```
-run the issue loop in parallel
-run the issue loop with 3 parallel agents
-```
-
-Target specific issues:
-
-```
-run the issue loop for #12 #15 #20
-```
-
-## Optional repo docs the workflow respects
+## Optional repo docs respected by both skills
 
 | File | Purpose |
 |---|---|
@@ -123,7 +138,7 @@ run the issue loop for #12 #15 #20
 | `CONTEXT.md` | Domain model / codebase orientation |
 | `docs/adr/` | Architecture decisions |
 
-These files are also read by the dependency skills. The `setup-matt-pocock-skills` skill can scaffold them for you.
+---
 
 ## Contributing
 

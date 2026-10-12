@@ -1,11 +1,16 @@
-# AFK Issue Loop
+# AFK Skills Suite
 
-Autonomous GitHub issue processing loop for AI coding agents.
+Autonomous GitHub development workflows and skills for AI coding agents.
+
+## Suite Skills
+
+1. **`afk-issue-loop`**: Autonomous batch processor over open GitHub issues (triage, implement, PR, watch CI, squash-merge in serial or parallel mode).
+2. **`afk-single-issue`**: Autonomous end-to-end runner for a single task (post-grill or specific issue): synthesizes `to-spec`, creates/labels issue, implements via TDD in an isolated worktree, opens PR with `/pr`, monitors CI until green, squash-merges, and tears down the worktree.
 
 ## Language
 
 **Worktree Registry**:
-The in-memory set of git worktree paths explicitly created and tracked by the current orchestrator session.
+The in-memory set of git worktree paths explicitly created and tracked by the current orchestrator session (`.worktrees/issue-<N>`).
 _Avoid_: Global worktrees, existing worktree scan
 
 **Settled Worktree**:

@@ -1,5 +1,5 @@
 interface:
-  display_name: "AFK Issue Loop"
-  short_description: "Autonomous rinse-and-repeat loop over GitHub issues: triage, implement, PR, merge."
+  display_name: "AFK Skills Suite"
+  short_description: "Autonomous GitHub skills: afk-issue-loop (backlog loop) and afk-single-issue (single task/spec-to-merge)."
 policy:
   allow_implicit_invocation: false
