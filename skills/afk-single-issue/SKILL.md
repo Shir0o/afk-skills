@@ -17,7 +17,7 @@ Autonomous end-to-end execution of a single task or issue. Takes conversational 
 5. **Standards-compliant PR.** The PR body must follow the structure defined in `skill://pr` (Summary with diff/diagram sketch, Evidence with before/after test output, Merge Danger door & blast radius) and include `Closes #<N>`.
 6. **Watch CI & auto-fix.** Monitor checks with `gh pr checks <pr> --watch`. Fix any CI failure on the same branch within the worktree (up to 3 fix cycles). If still blocked after 3 cycles, stop, leave the worktree intact, and report `blocked`.
 7. **Squash-merge & main sync.** Once all required checks are green, squash-merge the PR (`gh pr merge <pr> --squash --admin`), verify the issue auto-closes, and sync `main` in the primary checkout (`git pull --ff-only`).
-8. **Scoped worktree teardown.** Upon successful merge, remove the worktree (`git worktree remove --force .worktrees/issue-<N>`) and delete the local feature branch (`git branch -D agent/issue-<N>`). If blocked or failed, preserve the worktree and branch for developer inspection. Never touch worktrees belonging to other agents or sessions.
+8. **Scoped worktree teardown.** Upon successful merge or early resolution, remove all worktrees matching issue `<N>` (`git worktree list | grep -E "issue[-_]$N\b"`) and delete associated local branches (`*issue*$N*`). If blocked or failed, preserve them for developer inspection. Never touch unrelated worktrees belonging to other issues.
 
 ---
 
@@ -28,7 +28,13 @@ Autonomous end-to-end execution of a single task or issue. Takes conversational 
 Determine the input mode based on provided arguments and current conversation:
 
 - **Mode A: Issue argument provided (`#<N>` or issue URL)**
-  - Fetch issue details: `gh issue view <N> --json number,title,body,labels`.
+  - Fetch issue details: `gh issue view <N> --json number,title,body,labels,state`.
+  - Check if issue is already resolved/merged: `gh pr list --state all --search "$N"`.
+    - If a matching PR is already merged:
+      - Ensure issue is closed: if state is `OPEN`, run `gh issue close <N> --comment "Resolved and merged to main."`.
+      - Sync `main` in the primary workspace (`git pull --ff-only origin main`).
+      - Teardown any lingering worktrees or local branches matching issue $N$ (see Phase 4 Step 5).
+      - Report outcome and exit early.
   - If the issue body already contains a spec (`to-spec` or `to-tickets` markers), proceed directly to Phase 1.
   - If the issue body is raw prose or unlabeled:
     - Generate a formal spec following the `<spec-template>` below.
@@ -172,20 +178,24 @@ Execute inside `.worktrees/issue-<N>`:
    ```
 3. **Verify closure**:
    - Check that PR status is `MERGED`: `gh pr view "$PR" --json state`.
-   - Confirm issue #$N$ is closed.
+   - Confirm issue #$N$ is closed; if still open, close it: `gh issue close "$N" --comment "Resolved and merged via PR #$PR."`.
 4. **Sync main**:
    - In the primary workspace:
      ```bash
      git pull --ff-only origin main
      ```
 5. **Scoped worktree teardown**:
-   - Remove the worktree:
+   - Remove all worktrees associated with issue $N$:
      ```bash
-     git worktree remove --force ".worktrees/issue-$N"
+     git worktree list | grep -E "issue[-_]$N\b" | awk '{print $1}' | while read -r wt; do
+       git worktree remove --force "$wt"
+     done
      ```
-   - Delete local branch:
+   - Delete all matching local feature branches:
      ```bash
-     git branch -D "agent/issue-$N"
+     git branch --list "*issue*$N*" --format="%(refname:short)" | while read -r br; do
+       git branch -D "$br"
+     done
      ```
    - Prune worktree metadata:
      ```bash
