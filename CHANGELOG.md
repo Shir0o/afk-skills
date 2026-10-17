@@ -6,6 +6,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Changed
+- `afk-ship`: support Antigravity and external harness worktrees (`~/.gemini/antigravity/worktrees/`) in discovery and automatically sweep auxiliary/merged task worktrees during Phase 3 teardown
+
 ### Added
 - `afk-ship` skill and command: autonomous workflow for shipping completed work from an isolated worktree or branch (gate checks, commits, PR via `skill://pr`, CI monitoring with up to 3 auto-fix cycles, squash-merge, main sync, and safe worktree teardown)
 - Integration with Matt Pocock's `/pr` skill (`skill://pr`) for writing PR bodies with summary diagrams/diffs, before/after evidence, and merge danger analysis

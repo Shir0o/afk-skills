@@ -41,7 +41,7 @@ Determine the target worktree, branch, primary checkout root, and linked issue:
      - **Mode B: Worktree path or branch argument**:
        Target the specified path or branch.
      - **Mode C: No argument**:
-       Inspect `git worktree list`. If exactly one active worktree in `.worktrees/` exists, target it; if multiple, target the most recently modified; if none, target the current feature branch.
+       Inspect `git worktree list`. Check `.worktrees/`, `~/.gemini/antigravity/worktrees/`, or active project worktrees. If active worktrees exist, target the one matching the current task/issue or most recently modified; if none, target the current feature branch.
 
 2. **Extract branch and linked issue number**:
    - Determine target branch: `git -C "$WORKTREE_DIR" rev-parse --abbrev-ref HEAD`.
@@ -176,15 +176,17 @@ Execute inside the target worktree directory (`$WORKTREE_DIR`):
 5. **Scoped worktree & branch teardown**:
    - Remove the worktree:
      ```bash
-     git worktree remove --force "$WORKTREE_DIR"
+     git worktree remove --force "$WORKTREE_DIR" 2>/dev/null || true
      ```
    - Delete local branch:
      ```bash
      git branch -D "$BRANCH" 2>/dev/null || true
      ```
-   - Prune worktree metadata:
+   - **Sweep stale task & merged worktrees**: Inspect `git worktree list`. If any auxiliary or session worktrees (e.g. in `~/.gemini/antigravity/worktrees/` or `.worktrees/`) were created for this task or are already merged into `main`, remove them with `git worktree remove --force <path>` and delete their local branches.
+   - Prune worktree metadata and remote references:
      ```bash
      git worktree prune
+     git remote prune origin
      ```
 
 6. **Report outcome**:
