@@ -8,11 +8,12 @@
 
 ## Skills in this Suite
 
-This repository provides two complementary autonomous skills:
+This repository provides complementary autonomous skills:
 
 | Skill | Path | Description |
 |---|---|---|
 | **`afk-single-issue`** | [`skills/afk-single-issue/SKILL.md`](skills/afk-single-issue/SKILL.md) | **Single-task end-to-end runner**: Takes an active conversation (e.g. post-`/grill-with-docs`) or single issue, synthesizes `to-spec`, labels `ready-for-agent`, implements via TDD in an isolated worktree, opens PR with `/pr`, watches CI, squash-merges, and cleans up worktree. |
+| **`afk-ship`** | [`skills/afk-ship/SKILL.md`](skills/afk-ship/SKILL.md) | **Fast-track PR & merge runner**: For when implementation is already finished in a worktree or branch. Verifies commits/gates, pushes branch, drafts PR via `/pr`, watches CI (auto-fixing up to 3 cycles), squash-merges, syncs `main`, and deletes worktree. |
 | **`afk-issue-loop`** | [`skills/afk-issue-loop/SKILL.md`](skills/afk-issue-loop/SKILL.md) | **Backlog batch loop**: Continuously processes issues across your GitHub repository (triages unlabeled issues, implements `ready-for-agent` issues in serial or parallel worktrees, PRs, watches CI, squash-merges, and repeats). |
 
 ---
@@ -65,7 +66,53 @@ run afk-single-issue for #42
 
 ---
 
-## 2. `afk-issue-loop` (Autonomous Backlog Processor)
+## 2. `afk-ship` (Implementation Done Runner)
+
+Use this when implementation is already finished in a worktree or feature branch, and you just want to ship it hands-free through PR, CI, squash-merge, and worktree cleanup.
+
+### Workflow
+
+```
+Completed Implementation in Worktree / Branch
+  │
+  ▼
+Phase 0: Target Context Discovery
+  • Detect active worktree & branch (from inside worktree or via issue #/branch arg)
+  • Resolve linked issue # (from branch, commits, or args)
+  │
+  ▼
+Phase 1: Pre-Push Integrity
+  • Stage & commit any remaining uncommitted changes
+  • Run local quality gates (typecheck, lint, test)
+  • Push branch to remote (git push -u origin <branch>)
+  │
+  ▼
+Phase 2: Pull Request & CI Watch
+  • Create PR using /pr template (Summary sketch, Evidence, Merge Danger)
+  • Watch CI (gh pr checks --watch), auto-fix up to 3 cycles if red
+  │
+  ▼
+Phase 3: Squash-Merge & Clean Teardown
+  • gh pr merge --squash --admin
+  • Navigate to primary repo root & sync main (git pull --ff-only)
+  • Remove worktree, delete local branch, and prune metadata
+```
+
+### Usage
+
+```bash
+# Run from inside the worktree when implementation is done:
+run afk-ship
+ship this
+
+# Or run from the primary repo targeting an issue or branch:
+run afk-ship for #42
+run afk-ship agent/issue-42
+```
+
+---
+
+## 3. `afk-issue-loop` (Autonomous Backlog Processor)
 
 Use this to autonomously drain an entire repository queue.
 
@@ -93,10 +140,10 @@ These workflows integrate with companion skill files from [Matt Pocock's enginee
 |---|---|---|
 | [`to-spec`](https://github.com/mattpocock/skills/tree/main/to-spec) | `afk-single-issue` | Synthesizes conversation context into structured spec |
 | [`triage`](https://github.com/mattpocock/skills/tree/main/triage) | `afk-issue-loop` | Labels unlabeled/needs-triage issues, closes duplicates |
-| [`implement`](https://github.com/mattpocock/skills/tree/main/implement) | Both | Branches, writes code, prepares PR |
-| [`tdd`](https://github.com/mattpocock/skills/tree/main/tdd) | Both | Red-green-refactor cycle |
-| [`code-review`](https://github.com/mattpocock/skills/tree/main/code-review) | Both | Pre-push self-review against standards & spec |
-| [`pr`](https://github.com/mattpocock/skills/tree/main/skills/engineering/pr) | Both | Standards-compliant PR description |
+| [`implement`](https://github.com/mattpocock/skills/tree/main/implement) | `afk-single-issue`, `afk-issue-loop` | Branches, writes code, prepares PR |
+| [`tdd`](https://github.com/mattpocock/skills/tree/main/tdd) | `afk-single-issue`, `afk-issue-loop` | Red-green-refactor cycle |
+| [`code-review`](https://github.com/mattpocock/skills/tree/main/code-review) | `afk-single-issue`, `afk-issue-loop` | Pre-push self-review against standards & spec |
+| [`pr`](https://github.com/mattpocock/skills/tree/main/skills/engineering/pr) | All | Standards-compliant PR description |
 
 ---
 
@@ -115,6 +162,11 @@ done
 ### 2. Install AFK Skills
 
 ```bash
+# Install afk-ship
+mkdir -p .agents/skills/afk-ship
+curl -fsSL https://raw.githubusercontent.com/Shir0o/afk-skills/main/skills/afk-ship/SKILL.md \
+  -o .agents/skills/afk-ship/SKILL.md
+
 # Install afk-single-issue
 mkdir -p .agents/skills/afk-single-issue
 curl -fsSL https://raw.githubusercontent.com/Shir0o/afk-skills/main/skills/afk-single-issue/SKILL.md \
@@ -128,7 +180,7 @@ curl -fsSL https://raw.githubusercontent.com/Shir0o/afk-skills/main/skills/afk-i
 
 ---
 
-## Optional repo docs respected by both skills
+## Optional repo docs respected across skills
 
 | File | Purpose |
 |---|---|
