@@ -12,7 +12,7 @@ Autonomous runner for shipping completed implementations. When coding, refactori
 
 1. **Fully AFK execution.** Do not prompt the user for seam confirmation, PR approval, or manual merge decisions during the run. Implementation is already complete.
 2. **Directory & worktree awareness.** The command may be executed from inside the worktree itself OR from the primary repository checkout. Always detect the primary repository root and target worktree. **Never** attempt `git worktree remove` while current working directory is inside that worktree; navigate back to the primary checkout before teardown.
-3. **Commit & pre-push integrity.** If uncommitted changes exist, stage and commit them with a descriptive conventional commit referencing the issue (e.g. `feat: ... (closes #<N>)`). Run local quality gates (typecheck, lint, tests) before pushing to remote.
+3. **Commit & pre-push integrity.** If uncommitted changes exist, stage and commit them with a descriptive conventional commit referencing the issue (e.g. `feat: ... (closes #<N>)`). Run lightweight local quality gates (typecheck, lint) before pushing to remote. Do not run full test suites locally; GitHub CI handles test verification.
 4. **Standards-compliant PR via `skill://pr`.** The PR body must adhere to `skill://pr`:
    - `## Summary`: visual summary (ascii diagram, component tree, or diff sketch).
    - `## Evidence`: concrete verification (before vs. after test runs or output).
@@ -85,8 +85,9 @@ Execute inside the target worktree directory (`$WORKTREE_DIR`):
 
 2. **Run local quality gates**:
    - Inspect repo guidelines (`AGENTS.md`, `package.json`, `Makefile`, etc.).
-   - Run typechecking, linting, and tests (e.g. `npm run typecheck && npm run lint && npm test` or `flutter analyze && flutter test`).
-   - If local tests fail, fix them inside the worktree before pushing.
+   - Run lightweight static gates: typechecking and linting (e.g. `npm run typecheck && npm run lint` or `flutter analyze`).
+   - **Do not run full test suites locally**: Offload full test execution to GitHub CI to prevent host CPU exhaustion.
+   - If static checks fail, fix them inside the worktree before pushing.
 
 3. **Push branch to remote**:
    ```bash

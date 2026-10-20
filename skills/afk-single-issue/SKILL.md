@@ -13,7 +13,7 @@ Autonomous end-to-end execution of a single task or issue. Takes conversational 
 1. **Fully AFK execution.** Do not prompt the user for seam confirmation, PR approval, or manual merge decisions during the run. The design and requirements have already been established prior to calling this skill.
 2. **Strict worktree isolation.** All implementation work must occur in an isolated git worktree (`.worktrees/issue-<N>`) on branch `agent/issue-<N>` branched from the latest `origin/main`. Never modify code directly on `main` in the primary workspace.
 3. **Spec-first discipline.** Every implementation must be grounded in a concrete specification using the `to-spec` format (Problem Statement, Solution, User Stories, Implementation Decisions, Testing Decisions).
-4. **TDD at pre-agreed seams.** Work must follow test-driven development (red-green-refactor) as specified in `AGENTS.md` and `skill://tdd`. Run typechecks and tests regularly.
+4. **TDD at pre-agreed seams & CI test delegation.** Work follows test-driven discipline where applicable. When verifying seams, run only targeted single test files. Do not run full test suites (`flutter test`, `npm test`, etc.) locally before opening PRs; let GitHub CI run full test matrices to preserve host CPU.
 5. **Standards-compliant PR.** The PR body must follow the structure defined in `skill://pr` (Summary with diff/diagram sketch, Evidence with before/after test output, Merge Danger door & blast radius) and include `Closes #<N>`.
 6. **Watch CI & auto-fix.** Monitor checks with `gh pr checks <pr> --watch`. Fix any CI failure on the same branch within the worktree (up to 3 fix cycles). If still blocked after 3 cycles, stop, leave the worktree intact, and report `blocked`.
 7. **Squash-merge & main sync.** Once all required checks are green, squash-merge the PR (`gh pr merge <pr> --squash --admin`), verify the issue auto-closes, and sync `main` in the primary checkout (`git pull --ff-only`).
@@ -111,11 +111,12 @@ Execute inside `.worktrees/issue-<N>`:
    - Implement minimal code to pass tests.
    - Refactor cleanly preserving readability and domain conventions.
 2. **Quality Gates**:
-   - Run typechecking, linting, and full test suite as defined in the repo (`AGENTS.md` / `package.json`):
+   - Run lightweight local quality gates (typechecking and linting) as defined in the repo (`AGENTS.md` / `package.json`):
      ```bash
-     npm run typecheck && npm run lint && npm test
+     npm run typecheck && npm run lint # or: flutter analyze
      ```
-   - All tests must pass locally before creating a PR.
+   - **Do not run full test suites locally**: Offload full test execution and coverage to GitHub Actions CI to avoid excessive CPU load. If verifying a specific reproduction or seam during TDD, run *only that specific test file*.
+   - Static gates must pass locally before creating a PR.
 3. **Self-Review (`skill://code-review`)**:
    - Run code-review against standard axes (Standards & Spec alignment).
    - Ensure changes strictly adhere to the spec decisions and no extraneous modifications or regressions are introduced.
