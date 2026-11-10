@@ -14,10 +14,10 @@ Standard unit tests pass even when a screen is completely unusable—text clippe
 
 ## Operating Principles (Hard Rules)
 
-1. **Daily Full-Fleet Execution Powered by `opencode/deepseek-v4.1-flash-free` (`opencode-go/deepseek-v4.1-flash`).**
-   - Because heavy code reading, test harness generation, widget/CSS patching, and git/PR operations are side-loaded to **`opencode run -m opencode/deepseek-v4.1-flash-free`** (fallback: `opencode-go/deepseek-v4.1-flash` or `opencode/deepseek-v4.1-flash`), **all discovered UI repositories under `~/` can be processed daily** while staying well under a \$20/month budget.
-   - Antigravity `flash_lite` / `flash` subagents only handle lightweight orchestration and multimodal `read_file` visual inspection of the generated PNG screenshots (~1–2k tokens per repo), then invoke `opencode run -m opencode/deepseek-v4.1-flash-free "<surgical fix & test prompt>"` to execute the code changes for \$0.00 (free tier) or pennies.
-   - Maintain `~/.gemini/config/afk-ui-ux-state.json` to track `last_audited_at` per repository so interrupted runs resume cleanly from remaining repositories.
+1. **Daily Full-Fleet Execution Powered by `opencode-go/deepseek-v4.1-flash` (OpenCode Go Subscription).**
+   - Because heavy code reading, test harness generation, widget/CSS patching, and git/PR operations are side-loaded to your OpenCode Go subscription model **`opencode-go/deepseek-v4.1-flash`** (`opencode run -m opencode-go/deepseek-v4.1-flash`), **every discovered UI repository under `~/` is processed on every run** without burning Antigravity quota.
+   - The Antigravity `flash` (3.8 Flash low-effort) subagent acts as the **orchestrator and multimedia/vision specialist**: it triggers screenshot/golden captures, uses `read_file` to visually inspect the rendered PNG screenshots, and delegates the code/test authoring to `opencode run -m opencode-go/deepseek-v4.1-flash "<surgical instructions>"`.
+   - Maintain `~/.gemini/config/afk-ui-ux-state.json` to track `last_audited_at` per repository so interrupted runs resume cleanly and all repositories under `~/` are covered.
 
 2. **Dynamic Future-Proof Repository Discovery (`~/`).**
    - Never rely solely on a static hardcoded list. Dynamically discover all git repositories under `~/` (maxdepth 2, excluding `Library`, `Pictures`, `Music`, `Movies`, `.Trash`, `node_modules`, `.gemini`, `.claude`, `.agents`, `.github-repo`, `afk-skills`, `helpful-scripts`, and non-UI backend-only scripts).
@@ -27,16 +27,17 @@ Standard unit tests pass even when a screen is completely unusable—text clippe
      - **Web / Node / Capacitor / Eleventy (`package.json` / `.eleventy.js`)**
      - **Godot (`project.godot`)**
 
-3. **Cost-Minimal Subagent Delegation & DeepSeek V4.1 Flash Side-Loading.**
-   - **Native Antigravity Subagents**: `invoke_subagent` uses `Model: "flash_lite"` or `Model: "flash"` solely for orchestration and multimodal PNG vision critique (`read_file`).
-   - **Side-Loading to `opencode` (`opencode/deepseek-v4.1-flash-free` / `opencode-go/deepseek-v4.1-flash`)**:
-     - Your local `opencode` CLI has **`opencode/deepseek-v4.1-flash-free`**, **`opencode/deepseek-v4.1-flash`**, and **`opencode-go/deepseek-v4.1-flash`** configured and ready.
-     - Query the latest DeepSeek Flash model dynamically if needed (`opencode models | grep -E 'deepseek.*flash'`), preferring `opencode/deepseek-v4.1-flash-free` -> `opencode-go/deepseek-v4.1-flash` -> `opencode/deepseek-v4.1-flash`.
-     - Offload 90%+ of token consumption (scaffolding `test/ui_ux_audit_test.dart`, applying surgical widget/CSS fixes, running `flutter analyze` / `dart format`, and opening PRs) via:
+3. **Hybrid Architecture: Antigravity Flash (Orchestrator + Multimodal Vision) + OpenCode Go `opencode-go/deepseek-v4.1-flash` (Code & Test Lifting).**
+   - **Antigravity Subagent (`Model: "flash"`)**: Acts strictly as the orchestrator and multimedia/vision engine:
+     1. Runs `flutter test --update-goldens` (or Playwright / Android Emulator / iOS Simulator screenshot capture).
+     2. Uses `read_file` on the generated PNGs (`phone_light.png`, `phone_dark.png`, `small_large_font.png`, `step2_tab.png`) to perform multimodal visual and usability critique.
+     3. Runs `gh pr checks --watch`, `gh pr merge --squash --admin --delete-branch`, and verifies the Release Please + Google Play `internal` track release.
+   - **OpenCode Go (`opencode-go/deepseek-v4.1-flash`)**: Handles all code reading, test harness authoring (`test/ui_ux_audit_test.dart`), and surgical widget/CSS code edits:
+     - Check available OpenCode Go DeepSeek Flash model if needed (`opencode models | grep 'opencode-go/deepseek.*flash'`), defaulting to **`opencode-go/deepseek-v4.1-flash`**.
+     - Invoke from the repository root:
        ```bash
-       opencode run -m opencode/deepseek-v4.1-flash-free "<detailed surgical instructions>"
+       opencode run -m opencode-go/deepseek-v4.1-flash "<detailed surgical instructions>"
        ```
-     - This hybrid architecture allows **every coding repository under `~/` to run daily** well within a \$20/month ceiling.
    - Run at most **1–2 subagents concurrently** to conserve host CPU and memory (`AGENTS.md` §6).
 
 4. **Visual + Interactive Click-Through First (Never Programmatic-Only).**
@@ -81,11 +82,11 @@ Standard unit tests pass even when a screen is completely unusable—text clippe
 
 2. **Load `~/.gemini/config/afk-ui-ux-state.json`** (create if missing):
    - Sort discovered UI repositories by oldest `last_audited_at` timestamp (repositories not yet audited today come first).
-   - Process **all discovered repositories daily** when side-loading via `opencode/deepseek-v4.1-flash-free` (`opencode-go/deepseek-v4.1-flash`), or limit to `--limit <N>` if explicitly passed.
+   - Process **every discovered UI repository under `~/`** on each run (unless `--repo <name>` or `--limit <N>` is explicitly passed).
 
-3. **Dispatch Subagents (`Model: "flash_lite"` / `"flash"` + `opencode` DeepSeek V4.1 Flash)**:
-   - Launch `invoke_subagent` (`TypeName: "self"`, `Model: "flash"`) in batches of at most 2 concurrent subagents.
-   - Each subagent offloads code scaffolding and surgical edits to `opencode run -m opencode/deepseek-v4.1-flash-free` (or the latest DeepSeek Flash model from `opencode models | grep -E 'deepseek.*flash'`) while using its native multimodal `read_file` to inspect rendered screenshots.
+3. **Dispatch Subagents (`Model: "flash"` Orchestrator/Multimedia + `opencode-go/deepseek-v4.1-flash` Code Engine)**:
+   - Launch `invoke_subagent` (`TypeName: "self"`, `Model: "flash"`) in batches of at most 2 concurrent subagents across all discovered repositories.
+   - Each subagent offloads code reading, `test/ui_ux_audit_test.dart` scaffolding, and surgical widget/CSS edits to **`opencode run -m opencode-go/deepseek-v4.1-flash`** while using its native multimodal `read_file` tool to inspect rendered PNG screenshots.
 
 ---
 
