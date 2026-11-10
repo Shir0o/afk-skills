@@ -7,6 +7,7 @@ Autonomous GitHub development workflows and skills for AI coding agents.
 1. **`afk-issue-loop`**: Autonomous batch processor over open GitHub issues (triage, implement, PR, watch CI, squash-merge in serial or parallel mode).
 2. **`afk-single-issue`**: Autonomous end-to-end runner for a single task (post-grill or specific issue): synthesizes `to-spec`, creates/labels issue, implements via TDD in an isolated worktree, opens PR with `/pr`, monitors CI until green, squash-merges, and tears down the worktree.
 3. **`afk-ship`**: Autonomous runner for completed work: takes an existing worktree/branch where implementation is finished, verifies gates/commits, pushes, opens PR with `/pr`, monitors CI until green (auto-fix up to 3 cycles), squash-merges, syncs `main`, and deletes the worktree.
+4. **`afk-ui-ux-loop`**: Budget-aware UI/UX visual critique, interactive click-through E2E audit, and Google Play internal track release loop across `~/` repositories using LRU rotation and Flash subagents.
 
 ## Language
 
