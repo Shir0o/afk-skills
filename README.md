@@ -15,7 +15,7 @@ This repository provides complementary autonomous skills:
 | **`afk-single-issue`** | [`skills/afk-single-issue/SKILL.md`](skills/afk-single-issue/SKILL.md) | **Single-task end-to-end runner**: Takes an active conversation (e.g. post-`/grill-with-docs`) or single issue, synthesizes `to-spec`, labels `ready-for-agent`, implements via TDD in an isolated worktree, opens PR with `/pr`, watches CI, squash-merges, and cleans up worktree. |
 | **`afk-ship`** | [`skills/afk-ship/SKILL.md`](skills/afk-ship/SKILL.md) | **Fast-track PR & merge runner**: For when implementation is already finished in a worktree or branch. Verifies commits/gates, pushes branch, drafts PR via `/pr`, watches CI (auto-fixing up to 3 cycles), squash-merges, syncs `main`, and deletes worktree. |
 | **`afk-issue-loop`** | [`skills/afk-issue-loop/SKILL.md`](skills/afk-issue-loop/SKILL.md) | **Backlog batch loop**: Continuously processes issues across your GitHub repository (triages unlabeled issues, implements `ready-for-agent` issues in serial or parallel worktrees, PRs, watches CI, squash-merges, and repeats). |
-| **`afk-ui-ux-loop`** | [`skills/afk-ui-ux-loop/SKILL.md`](skills/afk-ui-ux-loop/SKILL.md) | **Budget-aware UI/UX & visual E2E audit loop**: Dynamically discovers `~/` repos, rotates 1–2 repos per run to stay within a \$20/mo budget, runs multi-viewport screenshot & interactive click-through audits (headless goldens, Playwright/DevTools MCP, or on-demand Android/iOS emulators with teardown), ships one surgical UI/UX improvement via PR, admin-merges both the PR and Release Please PR, and releases to Google Play internal track. |
+| **`afk-ui-ux-loop`** | [`skills/afk-ui-ux-loop/SKILL.md`](skills/afk-ui-ux-loop/SKILL.md) | **Visual UI/UX & E2E audit loop**: Audits a single repo or rotates across multi-repo workspaces via LRU state, runs multi-viewport screenshot & interactive click-through checks (Flutter widget goldens / optional emulator or Web DevTools MCP), ships one surgical UI/UX fix via PR, watches CI, squash-merges, and advances Release Please workflows when present. |
 
 ---
 
@@ -133,6 +133,30 @@ run the issue loop in parallel
 
 ---
 
+## 4. `afk-ui-ux-loop` (Visual UI/UX & E2E Audit Loop)
+
+Use this to inspect rendered screens across viewports and interactive states, fix one high-impact usability or visual defect, and ship it through CI and merge.
+
+- **Single-Repo or Fleet Rotation** — defaults to the current repository; pass `--root <dir>` to discover Flutter/Web repos and rotate through the oldest `--limit <N>` repos using `--state-file`.
+- **Visual + Click-Through Verification** — captures Light, Dark, and Small + `1.6x` text-scale views (`390x844`, `320x568`) plus navigation tap/click flows for Flutter (`flutter test --update-goldens`) and Mobile/Desktop (`375x667`, `1280x800`) via `chrome-devtools-mcp` for Web.
+- **Optional External Code Delegation** — works standalone or delegates heavy code/test edits via `--code-cmd` while keeping screenshot inspection in the multimodal subagent.
+- **Clean Teardown & Release** — deletes temporary screenshots, shuts down any temporary emulator/dev server, opens a PR, watches CI, squash-merges, and optionally advances `release-please.yml` if configured.
+
+### Usage
+
+```bash
+# Audit the current repository
+run afk-ui-ux-loop
+
+# Rotate through the 5 oldest UI repos under ~/projects
+run afk-ui-ux-loop --root ~/projects --limit 5
+
+# Audit a single repo and delegate code edits to an external CLI
+run afk-ui-ux-loop --repo my-app --code-cmd "opencode run -m <model>"
+```
+
+---
+
 ## Dependencies
 
 These workflows integrate with companion skill files from [Matt Pocock's engineering skill suite](https://github.com/mattpocock/skills):
@@ -177,6 +201,11 @@ curl -fsSL https://raw.githubusercontent.com/Shir0o/afk-skills/main/skills/afk-s
 mkdir -p .agents/skills/afk-issue-loop
 curl -fsSL https://raw.githubusercontent.com/Shir0o/afk-skills/main/skills/afk-issue-loop/SKILL.md \
   -o .agents/skills/afk-issue-loop/SKILL.md
+
+# Install afk-ui-ux-loop
+mkdir -p .agents/skills/afk-ui-ux-loop
+curl -fsSL https://raw.githubusercontent.com/Shir0o/afk-skills/main/skills/afk-ui-ux-loop/SKILL.md \
+  -o .agents/skills/afk-ui-ux-loop/SKILL.md
 ```
 
 ---

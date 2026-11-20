@@ -1,12 +1,12 @@
-# Contributing to afk-issue-loop
+# Contributing to afk-skills
 
-Thanks for your interest in contributing! This is a natural-language workflow file (`SKILL.md`) for AI coding agents. The entire skill is a single markdown file — no build step, no dependencies to install for development.
+Thanks for your interest in contributing! Each skill in this repository is a natural-language workflow file (`skills/<skill-name>/SKILL.md`) for AI coding agents — no build step, no dependencies to install for development.
 
 ## How to contribute
 
 ### Reporting bugs or suggesting improvements
 
-Open a [GitHub Issue](https://github.com/Shir0o/afk-issue-loop-skill/issues). Please include:
+Open a [GitHub Issue](https://github.com/Shir0o/afk-skills/issues). Please include:
 
 - What you asked the agent to do
 - What it actually did (paste the agent's output or a transcript excerpt)
@@ -14,12 +14,12 @@ Open a [GitHub Issue](https://github.com/Shir0o/afk-issue-loop-skill/issues). Pl
 - Which AI coding agent you used
 - The dependency skills installed (`triage`, `implement`, `tdd`, `code-review`)
 
-### Proposing changes to `SKILL.md`
+### Proposing changes to `skills/<skill-name>/SKILL.md`
 
 1. Fork the repo
 2. Create a branch: `git checkout -b fix/describe-your-change`
-3. Edit `SKILL.md`
-4. Test it: load the skill into your agent, point it at a real repo, and run `process open issues AFK`
+3. Edit `skills/<skill-name>/SKILL.md`
+4. Test it: load the skill into your agent, point it at a real repo, and run the skill workflow
 5. Open a PR — describe what you changed, why, and what you tested
 
 ### What makes a good change
@@ -36,12 +36,12 @@ Open a [GitHub Issue](https://github.com/Shir0o/afk-issue-loop-skill/issues). Pl
 
 ## Development setup
 
-No build step. The entire workflow is `SKILL.md`.
+No build step. Each workflow lives in `skills/<skill-name>/SKILL.md`.
 
-To test your changes, copy the file into wherever your agent loads workflow/skill files from:
+To test your changes, copy the skill file into wherever your agent loads workflow/skill files from:
 
 ```bash
-cp SKILL.md /path/to/your/agent/skills/afk-issue-loop/SKILL.md
+cp skills/<skill-name>/SKILL.md /path/to/your/agent/skills/<skill-name>/SKILL.md
 ```
 
 Then run it in a repo that has the dependency skills installed.
