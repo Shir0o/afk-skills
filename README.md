@@ -16,6 +16,7 @@ This repository provides complementary autonomous skills:
 | **`afk-ship`** | [`skills/afk-ship/SKILL.md`](skills/afk-ship/SKILL.md) | **Fast-track PR & merge runner**: For when implementation is already finished in a worktree or branch. Verifies commits/gates, pushes branch, drafts PR via `/pr`, watches CI (auto-fixing up to 3 cycles), squash-merges, syncs `main`, and deletes worktree. |
 | **`afk-issue-loop`** | [`skills/afk-issue-loop/SKILL.md`](skills/afk-issue-loop/SKILL.md) | **Backlog batch loop**: Continuously processes issues across your GitHub repository (triages unlabeled issues, implements `ready-for-agent` issues in serial or parallel worktrees, PRs, watches CI, squash-merges, and repeats). |
 | **`afk-ui-ux-loop`** | [`skills/afk-ui-ux-loop/SKILL.md`](skills/afk-ui-ux-loop/SKILL.md) | **Visual UI/UX & E2E audit loop**: Audits a single repo or rotates across multi-repo workspaces via LRU state, runs multi-viewport screenshot & interactive click-through checks (Flutter widget goldens / optional emulator or Web DevTools MCP), ships one surgical UI/UX fix via PR, watches CI, squash-merges, and advances Release Please workflows when present. |
+| **`afk-email-triage`** | [`skills/afk-email-triage/SKILL.md`](skills/afk-email-triage/SKILL.md) | **Tech alert email triage & remediation**: Scans Gmail inbox for unaddressed tech alerts (GitGuardian, Sentry, CI/security), maps each to its local repo, implements fixes in isolated worktrees (optionally via `--code-cmd`), opens PRs, watches CI, squash-merges, and archives resolved emails. |
 
 ---
 
@@ -157,6 +158,27 @@ run afk-ui-ux-loop --repo my-app --code-cmd "opencode run -m <model>"
 
 ---
 
+## 5. `afk-email-triage` (Tech Alert Email Triage & Remediation)
+
+Use this to scan your Gmail inbox for unaddressed technical alerts (GitGuardian, Sentry, GitHub CI/security, cloud alerts), fix them in isolated worktrees, ship PRs through CI to squash-merge, and archive resolved emails.
+
+- **Deduplication & Already-Addressed Check** — groups duplicate alert emails per `(repo, issue)` and verifies on `main`/open PRs before writing code.
+- **Secret-Safe Handling** — never copies raw secrets from GitGuardian alerts into coding CLI prompts, commits, or PRs, and flags exposed credentials for manual rotation.
+- **Optional External Code Delegation** — supports `--code-cmd "opencode run -m <model>"` or native editing tools, with lightweight local gates and GitHub CI verification.
+- **Archive on Resolution** — archives emails via `gmail mutate archive` only after the PR merges or the issue is verified already resolved.
+
+### Usage
+
+```bash
+# Triage inbox tech alerts across repos under ~
+run afk-email-triage --root ~ --code-cmd "opencode run -m opencode-go/deepseek-v4.1-flash" --admin-merge
+
+# Preview matches without editing or archiving
+run afk-email-triage --root ~ --dry-run
+```
+
+---
+
 ## Dependencies
 
 These workflows integrate with companion skill files from [Matt Pocock's engineering skill suite](https://github.com/mattpocock/skills):
@@ -206,6 +228,11 @@ curl -fsSL https://raw.githubusercontent.com/Shir0o/afk-skills/main/skills/afk-i
 mkdir -p .agents/skills/afk-ui-ux-loop
 curl -fsSL https://raw.githubusercontent.com/Shir0o/afk-skills/main/skills/afk-ui-ux-loop/SKILL.md \
   -o .agents/skills/afk-ui-ux-loop/SKILL.md
+
+# Install afk-email-triage
+mkdir -p .agents/skills/afk-email-triage
+curl -fsSL https://raw.githubusercontent.com/Shir0o/afk-skills/main/skills/afk-email-triage/SKILL.md \
+  -o .agents/skills/afk-email-triage/SKILL.md
 ```
 
 ---

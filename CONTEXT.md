@@ -8,6 +8,7 @@ Autonomous GitHub development workflows and skills for AI coding agents.
 2. **`afk-single-issue`**: Autonomous end-to-end runner for a single task (post-grill or specific issue): synthesizes `to-spec`, creates/labels issue, implements via TDD in an isolated worktree, opens PR with `/pr`, monitors CI until green, squash-merges, and tears down the worktree.
 3. **`afk-ship`**: Autonomous runner for completed work: takes an existing worktree/branch where implementation is finished, verifies gates/commits, pushes, opens PR with `/pr`, monitors CI until green (auto-fix up to 3 cycles), squash-merges, syncs `main`, and deletes the worktree.
 4. **`afk-ui-ux-loop`**: Autonomous UI/UX visual critique and interactive click-through E2E audit loop (single-repo or multi-repo LRU rotation across Flutter and Web projects), shipping one surgical improvement per run via PR, CI watch, squash-merge, and optional Release Please pipeline advancement.
+5. **`afk-email-triage`**: Autonomous Gmail inbox triage and end-to-end remediation for technical alert emails (GitGuardian, Sentry, GitHub CI/security), implementing fixes in isolated worktrees (optionally via `--code-cmd`), watching CI, squash-merging, and archiving resolved emails.
 
 ## Language
 
