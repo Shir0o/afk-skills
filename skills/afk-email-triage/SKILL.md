@@ -18,7 +18,7 @@ Autonomous inbox triage and end-to-end remediation loop for technical alert emai
 
 - **Gmail Query (`--query`)**:
   - Default:
-    `in:inbox (from:gitguardian OR from:sentry OR from:notifications@github.com OR from:cloudflare OR from:vercel OR from:firebase OR from:supabase OR from:netlify OR from:snyk OR from:codecov OR from:bugsnag OR from:rollbar OR subject:"GitGuardian" OR subject:"Sentry" OR subject:"secret detected" OR subject:"workflow run failed" OR subject:"security alert")`
+    `in:inbox (from:gitguardian OR from:sentry OR from:notifications@github.com OR from:snyk OR from:codecov OR from:bugsnag OR from:rollbar OR from:noreply@notify.cloudflare.com OR subject:"GitGuardian" OR subject:"Sentry" OR subject:"secret detected" OR subject:"workflow run failed")`
 - **Max Emails (`--max-emails`)**:
   - Maximum messages to fetch per run (default: `20`, passed via `gmail readonly read ... --max <N>`).
 - **Repository Root & Owner (`--root`, `--owner`)**:
@@ -75,10 +75,12 @@ Autonomous inbox triage and end-to-end remediation loop for technical alert emai
    - Run `<GMAIL_SKILL_DIR>/scripts/gmail --version` once (e.g. `~/.gemini/config/plugins/gmail/skills/gmail/scripts/gmail --version`), then always invoke bare `gmail`.
 2. **Fetch candidate tech alert emails**:
    ```bash
-   gmail readonly read "<query>" --max <max-emails>
+   gmail readonly search "<query>" --max <max-emails>
    ```
+   - `gmail readonly search` returns `ID`, `From`, `Subject`, and `Date` (needed for archiving).
+   - For each relevant tech alert `ID`, fetch the full plain-text body via `gmail readonly get <ID>` (or `gmail readonly read "<query>" --max <max-emails>`).
    - Never pipe `gmail` output to `grep`, `egrep`, or `awk`; use Gmail query operators directly.
-   - Capture each message's `MESSAGE_ID`, `THREAD_ID`, sender, subject, date, and structured alert details.
+   - Capture each message's `MESSAGE_ID`, sender, subject, date, and structured alert details.
 3. **Group & deduplicate**:
    - Group related messages by `(repo, issue/alert)` so duplicate notifications for the same alert are processed once while tracking all matching `MESSAGE_ID`s for archiving upon resolution.
    - If no matching emails are found, report `No tech alert emails found in inbox` and exit cleanly.
